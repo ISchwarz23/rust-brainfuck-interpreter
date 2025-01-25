@@ -31,19 +31,37 @@ fn main() {
     };
 
     // Clean code
-    let code = code.replace("\n", "")
+    let code = code
+        .replace("\n", "")
         .replace("\r", "")
         .replace("\t", "")
         .replace(" ", "");
 
     // Interpret code
-    let tokens = tokenizer::tokenize(&code)
-        .map_err(|e| e.message())
-        .expect("Error during tokenizing");
-    let expressions = parser::parse(&tokens)
-        .map_err(|e| e.message())
-        .expect("Error during parsing");
-    runtime::execute(expressions)
-        .map_err(|e| e.message())
-        .expect("Error during execution");
+    let tokenizer_result = tokenizer::tokenize(&code);
+    let tokens = match tokenizer_result {
+        Ok(tokens) => tokens,
+        Err(err) => {
+            eprintln!("Error during tokenizing: {:?}", err.message());
+            process::exit(1);
+        }
+    };
+
+    let parser_result = parser::parse(&tokens);
+    let expressions = match parser_result {
+        Ok(expressions) => expressions,
+        Err(err) => {
+            eprintln!("Error during parsing: {:?}", err.message());
+            process::exit(1);
+        }
+    };
+
+    let execution_result = runtime::execute(expressions);
+    match execution_result {
+        Ok(_) => {}
+        Err(err) => {
+            eprintln!("Error during execution: {:?}", err.message());
+            process::exit(1);
+        }
+    }
 }

@@ -1,3 +1,5 @@
+use std::io;
+use std::io::Write;
 use crate::parser::Expression;
 
 pub fn execute(expressions: Vec<Expression>) -> Result<(), RuntimeError> {
@@ -18,7 +20,7 @@ fn execute_internal(
                 }
             }
             Expression::ModifyRegister(x) => {
-                memory.modify_current_register(x);
+                memory.modify_current_register_value(x);
             }
             Expression::Loop(exp) => {
                 while memory.get_current_register_value() != 0 {
@@ -37,12 +39,41 @@ fn execute_internal(
                 }
             }
             Expression::ReadToRegister => {
-                todo!()
+                let value = read_value_from_stdin();
+                memory.set_current_register_value(value);
             }
         }
     }
     Ok(())
 }
+
+fn read_value_from_stdin() -> isize {
+    loop {
+        // Prompt the user
+        print!("Please enter a value: ");
+        io::stdout().flush().unwrap();
+
+        // Create a mutable String to hold input
+        let mut input = String::new();
+
+        // Read input from the standard input
+        match io::stdin().read_line(&mut input) {
+            Ok(_) => {
+                // Try to parse the input into an isize
+                match input.trim().parse::<isize>() {
+                    Ok(number) => return number, // Return the parsed number on success
+                    Err(_) => {
+                        println!("Invalid input. Please try again.");
+                    }
+                }
+            }
+            Err(_) => {
+                println!("Failed to read input. Please try again.");
+            }
+        }
+    }
+}
+
 
 #[derive(Debug)]
 struct Memory {
@@ -92,11 +123,15 @@ impl Memory {
         Ok(())
     }
 
-    fn modify_current_register(&mut self, value: &isize) {
+    fn modify_current_register_value(&mut self, value: &isize) {
         self.segments[self.pointer_index] += value;
     }
 
     fn get_current_register_value(&self) -> isize {
         self.segments[self.pointer_index]
+    }
+
+    fn set_current_register_value(&mut self, value: isize) {
+        self.segments[self.pointer_index] = value;
     }
 }
