@@ -1,4 +1,4 @@
-use crate::tokenizer::Token;
+use crate::lexer::Token;
 
 #[derive(Debug)]
 pub enum Expression {

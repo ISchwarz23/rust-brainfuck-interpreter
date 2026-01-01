@@ -2,7 +2,7 @@ use std::{env, fs, process};
 
 mod parser;
 mod runtime;
-mod tokenizer;
+mod lexer;
 
 fn main() {
     // Retrieve command-line arguments
@@ -30,16 +30,16 @@ fn main() {
         file_path_or_code.to_owned()
     };
 
-    // Clean code
+    // remove non code chars
     let code = code
         .replace("\n", "")
         .replace("\r", "")
         .replace("\t", "")
         .replace(" ", "");
 
-    // Interpret code
-    let tokenizer_result = tokenizer::tokenize(&code);
-    let tokens = match tokenizer_result {
+    // lexing
+    let lexer_result = lexer::lex(&code);
+    let tokens = match lexer_result {
         Ok(tokens) => tokens,
         Err(err) => {
             eprintln!("Error during tokenizing: {:?}", err.message());
@@ -47,16 +47,18 @@ fn main() {
         }
     };
 
+    // parsing
     let parser_result = parser::parse(&tokens);
-    let expressions = match parser_result {
-        Ok(expressions) => expressions,
+    let ast = match parser_result {
+        Ok(ast) => ast,
         Err(err) => {
             eprintln!("Error during parsing: {:?}", err.message());
             process::exit(1);
         }
     };
 
-    let execution_result = runtime::execute(expressions);
+    // executing
+    let execution_result = runtime::execute(ast);
     match execution_result {
         Ok(_) => {}
         Err(err) => {

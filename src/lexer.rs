@@ -11,32 +11,32 @@ pub enum Token {
 }
 
 #[derive(Debug)]
-pub struct TokenizeError {
+pub struct LexingError {
     symbol: char,
     index: usize,
 }
 
-impl TokenizeError {
+impl LexingError {
     pub(crate) fn message(&self) -> String {
         format!("Unrecognized symbol '{}' at index {}.", self.symbol, self.index)
     }
 }
 
-pub fn tokenize(code: &str) -> Result<Vec<Token>, TokenizeError> {
+pub fn lex(code: &str) -> Result<Vec<Token>, LexingError> {
     code.chars().into_iter()
-        .map(|c| tokenize_one(c))
+        .map(|c| to_token(c))
         .enumerate()
         .try_fold(Vec::new(), |mut acc, (index, token)| {
             if token.is_some() {
                 acc.push(token.unwrap());
                 Ok(acc)
             } else {
-                Err(TokenizeError{ index, symbol: code.chars().nth(index).unwrap() })
+                Err(LexingError { index, symbol: code.chars().nth(index).unwrap() })
             }
         })
 }
 
-fn tokenize_one(c: char) -> Option<Token> {
+fn to_token(c: char) -> Option<Token> {
     match c {
         '>' => { Some(Token::MovePointerRight) }
         '<' => { Some(Token::MovePointerLeft) }
